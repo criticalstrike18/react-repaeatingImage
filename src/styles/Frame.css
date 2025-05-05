@@ -1,0 +1,58 @@
+/* Frame component styles - Exact match to original */
+.frame {
+  font-size: var(--font-size-l);
+  font-weight: 500;
+  display: grid;
+  z-index: 1000;
+  width: 100%;
+  position: relative;
+  grid-column-gap: var(--c-gap);
+  grid-row-gap: 0.5rem;
+  pointer-events: none;
+  justify-items: start;
+  grid-template-columns: auto;
+  grid-template-areas:
+    'title'
+    'links'
+    'tags'
+    'sponsor';
+}
+
+.frame a,
+.frame button {
+  pointer-events: auto;
+  color: var(--color-text);
+}
+
+.frame__title {
+  font-size: inherit;
+  margin: 0;
+  font-weight: inherit;
+  grid-area: title;
+}
+
+.frame__tags,
+.frame__links {
+  grid-area: tags;
+  display: flex;
+  gap: 0.5rem;
+  align-items: start;
+}
+
+.frame__links {
+  grid-area: links;
+}
+
+.frame.frame--footer {
+  display: flex;
+  min-height: 300px;
+  align-items: end;
+  justify-content: space-between;
+}
+
+@media screen and (min-width: 65em) {
+  .frame {
+    grid-template-columns: repeat(var(--column-count), minmax(var(--column), 1fr));
+    grid-template-areas: 'title title links links tags tags ... sponsor';
+  }
+}

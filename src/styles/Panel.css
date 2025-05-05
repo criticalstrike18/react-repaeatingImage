@@ -1,0 +1,196 @@
+/* Panel component styles - Exact match to original */
+.panel {
+  position: fixed;
+  margin: 0;
+  width: 100%;
+  height: 100vh;
+  padding: var(--page-padding);
+  top: 0;
+  left: 0;
+  display: grid;
+  gap: var(--panel-gap);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2000;
+  will-change: transform, clip-path;
+  justify-content: center;
+  grid-template-rows: 1fr min-content;
+  grid-template-columns: 100%;
+  grid-template-areas: 'panel-image' 'panel-content';
+}
+
+@media screen and (min-width: 40em) {
+  .panel {
+    grid-template-columns: var(--panel-img-size) 1fr;
+    grid-template-areas: 'panel-image panel-content';
+    grid-template-rows: 100%;
+  }
+}
+
+.panel--right {
+  grid-template-areas: 'panel-image' 'panel-content';
+}
+
+@media screen and (min-width: 40em) {
+  .panel--right {
+    grid-template-columns: 1fr var(--panel-img-size);
+    grid-template-areas: 'panel-content panel-image';
+  }
+}
+
+.panel__img {
+  grid-area: panel-image;
+  background-size: cover;
+  background-position: center;
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--aspect);
+}
+
+@media screen and (min-width: 40em) {
+  .panel__img {
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+  }
+}
+
+.panel__content {
+  grid-area: panel-content;
+  margin-top: auto; /* Push to bottom */
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  justify-content: end;
+  align-items: end;
+  text-align: right;
+}
+
+.panel--right .panel__content {
+  align-items: start;
+  text-align: left;
+}
+
+/* Media query adjustments */
+@media screen and (max-width: 40em) {
+  .panel {
+    grid-template-rows: auto auto auto;
+    grid-template-areas: 
+      "panel-image"
+      "product-content"
+      "panel-content";
+  }
+  
+  .panel--right {
+    grid-template-areas: 
+      "panel-image"
+      "product-content"
+      "panel-content";
+  }
+  
+  .product-content {
+    align-self: center;
+  }
+}
+
+.panel__content h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.panel__content p {
+  margin: 0;
+  max-width: 150px;
+  text-wrap: pretty;
+}
+
+.panel__close {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  color: var(--color-close);
+}
+
+.panel__close:hover,
+.panel__close:focus {
+  outline: none;
+  color: var(--color-link-hover);
+}
+
+/* Panel content layout */
+.panel__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+/* T-shirt display */
+.panel__tshirt {
+  position: relative;
+  width: 200px;
+  height: 200px;
+}
+
+.panel__tshirt-base {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.panel__tshirt-design {
+  position: absolute;
+  top: 30%;
+  left: 30%;
+  width: 40%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Product card section */
+.panel__product-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Panel top content */
+.panel__top-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.panel--right .panel__top-content {
+  align-items: flex-start;
+}
+
+/* Make panel scrollable if needed */
+.panel {
+  overflow-y: auto;
+  max-height: 100vh;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 40em) {
+  .panel__top-content {
+    align-self: center;
+    width: 100%;
+  }
+  
+  .panel__tshirt {
+    width: 160px;
+    height: 180px;
+  }
+  
+  .panel__product-card {
+    max-width: none;
+    width: 100%;
+  }
+}

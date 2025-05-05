@@ -1,0 +1,38 @@
+/* Grid component styles - Exact match to original CSS */
+.grid {
+  padding: 1rem 0;
+  display: grid;
+  grid-template-columns: repeat(var(--column-count), minmax(var(--column), 1fr));
+  grid-column-gap: var(--c-gap);
+  grid-row-gap: 5rem;
+  position: relative;
+}
+
+/* Media queries from original */
+@media screen and (min-width: 65em) {
+  .grid {
+    grid-template-columns: repeat(var(--column-count), minmax(var(--column), 1fr));
+  }
+}
+
+/* Mover elements styling */
+.mover {
+  position: fixed;
+  aspect-ratio: var(--aspect);
+  background-size: cover;
+  background-position: 50% 50%;
+  will-change: transform, clip-path;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* Blend mode options for mover elements through data attributes */
+.mover[data-blend-mode="hard-light"] { mix-blend-mode: hard-light; }
+.mover[data-blend-mode="multiply"] { mix-blend-mode: multiply; }
+.mover[data-blend-mode="overlay"] { mix-blend-mode: overlay; }
+.mover[data-blend-mode="screen"] { mix-blend-mode: screen; }
+.mover[data-blend-mode="difference"] { mix-blend-mode: difference; }
+.mover[data-blend-mode="exclusion"] { mix-blend-mode: exclusion; }
+.mover[data-blend-mode="color-dodge"] { mix-blend-mode: color-dodge; }
+.mover[data-blend-mode="color-burn"] { mix-blend-mode: color-burn; }
+.mover[data-blend-mode="luminosity"] { mix-blend-mode: luminosity; }
