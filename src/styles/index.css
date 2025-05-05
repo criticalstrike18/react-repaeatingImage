@@ -1,0 +1,223 @@
+/* Base styles - Exact match to original base.css */
+*,
+*::after,
+*::before {
+  box-sizing: border-box;
+}
+
+/* Loading styles - exact match to original */
+.loading::before,
+.loading::after {
+  content: '';
+  position: fixed;
+  z-index: 10000;
+}
+
+.loading::before {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--color-bg);
+}
+
+.loading::after {
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 1px;
+  margin: 0 0 0 -50px;
+  background: var(--color-link);
+  animation: loaderAnim 1.5s ease-in-out infinite alternate forwards;
+}
+
+/* Hide loading elements when body has loaded attribute */
+body[data-loaded="true"] .loading::before,
+body[data-loaded="true"] .loading::after {
+  opacity: 0;
+  pointer-events: none;
+}
+
+:root {
+  font-size: 14px;
+  --color-text: #151515;
+  --color-bg: #fff;
+  --color-link: #151515;
+  --color-link-hover: #000000;
+  --color-close: #a22d1d;
+  --page-padding: 1.5rem;
+  --c-gap: 0.5rem;
+  --column: 80px;
+  --column-count: 4;
+  --aspect: 4/5;
+  --font-size-l: 18px;
+  --font-size-xl: clamp(2rem, 10vw, 6rem);
+  --panel-gap: 1rem;
+  --panel-img-size: calc((100vh - var(--page-padding) * 2) * 4 / 5 - var(--panel-gap));
+}
+
+body {
+  margin: 0;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  font-family: 'halyard-display', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.2;
+  text-transform: lowercase;
+}
+
+/* Loading state animation - exact match */
+@keyframes loaderAnim {
+  0% {
+    transform: scaleX(0);
+    transform-origin: 0% 50%;
+  }
+  50% {
+    transform: scaleX(1);
+    transform-origin: 0% 50%;
+  }
+  50.1% {
+    transform: scaleX(1);
+    transform-origin: 100% 50%;
+  }
+  100% {
+    transform: scaleX(0);
+    transform-origin: 100% 50%;
+  }
+}
+
+/* Rest of CSS remains unchanged */
+a {
+  text-decoration: none;
+  color: var(--color-link);
+  outline: none;
+  cursor: pointer;
+}
+
+a:hover {
+  text-decoration: none;
+  color: var(--color-link-hover);
+}
+
+a:focus {
+  outline: none;
+  background: lightgrey;
+}
+
+a:focus:not(:focus-visible) {
+  background: transparent;
+}
+
+a:focus-visible {
+  outline: 2px solid red;
+  background: transparent;
+}
+
+.line {
+  display: inline-block;
+  overflow: hidden;
+  position: relative;
+  vertical-align: top;
+}
+
+.line::before {
+  background: currentColor;
+  bottom: 0;
+  content: '';
+  height: 1px;
+  left: 0;
+  position: absolute;
+  transition: transform 0.4s ease;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: right center;
+}
+
+.line:hover::before {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+main {
+  padding: var(--page-padding);
+}
+
+/* Grid styling - exact match to original */
+.grid {
+  padding: 1rem 0;
+  display: grid;
+  grid-template-columns: repeat(var(--column-count), minmax(var(--column), 1fr));
+  grid-column-gap: var(--c-gap);
+  grid-row-gap: 5rem;
+}
+
+/* Headings styling - exact match */
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 10rem 0 1rem;
+}
+
+.heading__title {
+  font-family: 'owners-xnarrow', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: var(--font-size-xl);
+  margin: 0;
+  line-height: 0.77;
+}
+
+.heading__meta::after {
+  content: '\00B7';
+  font-family: serif;
+  font-size: 3.5rem;
+  line-height: 0.2;
+  vertical-align: middle;
+  margin-left: 0.5rem;
+  display: inline-flex;
+}
+
+/* Mover styling - exact match */
+.mover {
+  position: fixed;
+  aspect-ratio: var(--aspect);
+  background-size: cover;
+  background-position: 50% 50%;
+  will-change: transform, clip-path;
+  pointer-events: none;
+  z-index: 1500;
+}
+
+/* Blend mode options for mover elements through data attributes - Exact match to original */
+.mover[data-blend-mode="hard-light"] { mix-blend-mode: hard-light; }
+.mover[data-blend-mode="multiply"] { mix-blend-mode: multiply; }
+.mover[data-blend-mode="overlay"] { mix-blend-mode: overlay; }
+.mover[data-blend-mode="screen"] { mix-blend-mode: screen; }
+.mover[data-blend-mode="difference"] { mix-blend-mode: difference; }
+.mover[data-blend-mode="exclusion"] { mix-blend-mode: exclusion; }
+.mover[data-blend-mode="color-dodge"] { mix-blend-mode: color-dodge; }
+.mover[data-blend-mode="color-burn"] { mix-blend-mode: color-burn; }
+.mover[data-blend-mode="luminosity"] { mix-blend-mode: luminosity; }
+
+/* Background image handler - exact match to original */
+[data-bg] {
+  background-image: none; /* Will be set via JS */
+}
+
+/* Ensure consistent background properties for all image elements */
+.grid__item-image, 
+.panel__img {
+  background-size: cover;
+  background-position: 50% 50%;
+}
+
+/* Media queries - exact match */
+@media screen and (min-width: 65em) {
+  :root {
+    --column-count: 8;
+  }
+}
