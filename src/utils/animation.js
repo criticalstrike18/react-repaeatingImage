@@ -322,7 +322,6 @@ export const revealPanel = (panelImg, container, config) => {
  * Animate panel reveal - Use the separate revealPanel function
  */
 export const animatePanel = (panel, panelImg, panelContent, config, clipPathDirection) => {
-  const clipPaths = getClipPathsForDirection(clipPathDirection);
   
   // Set initial state of panel
   gsap.set(panel, { opacity: 1, pointerEvents: 'auto' });
