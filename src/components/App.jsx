@@ -26,7 +26,6 @@ const App = ({ items }) => {
     }
     
     // Count total images to load
-    const totalImages = items.length;
     let loadedCount = 0;
     
     const preloadImage = (src) => {

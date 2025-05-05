@@ -15,7 +15,7 @@ const Panel = ({
   const contentRef = useRef(null);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   
-  const { config, setIsAnimating } = useAnimation();
+  const { setIsAnimating } = useAnimation();
   
   // Class name based on position - exact match to original
   const className = `panel ${position === 'right' ? 'panel--right' : ''}`;
