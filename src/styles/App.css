@@ -2,69 +2,30 @@
 .app {
   color: var(--color-text);
   background-color: var(--color-bg);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
 
-main {
-  flex: 1;
-  width: 100%;
-  height: 100%;
-  position: relative;
-  overflow-x: hidden;
-  z-index: 1;
-}
-
-/* Loading state styles */
-.loading {
+/* Loading state animation */
+.app.loading::before,
+.app.loading::after {
+  content: '';
   position: fixed;
+  z-index: 10000;
+}
+
+.app.loading::before {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  height: 100%;
   background: var(--color-bg);
-  z-index: 3000;
 }
 
-.loading__progress {
-  font-size: 1rem;
-  color: var(--color-text);
-}
-
-/* Loading animation */
-.loading::before,
-.loading::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  opacity: 0.7;
-  background-color: var(--color-text);
-  animation: loaderAnim 2s cubic-bezier(0.17, 0.37, 0.43, 0.67) infinite;
-}
-
-.loading::before {
-  width: 6rem;
-  height: 6rem;
-}
-
-.loading::after {
-  width: 4rem;
-  height: 4rem;
-  animation-delay: -0.5s;
-}
-
-@keyframes loaderAnim {
-  0% {
-    transform: translate(-50%, -50%) scale(0);
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(0);
-  }
+.app.loading::after {
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 1px;
+  margin: 0 0 0 -50px;
+  background: var(--color-link);
+  animation: loaderAnim 1.5s ease-in-out infinite alternate forwards;
 }

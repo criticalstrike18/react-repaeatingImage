@@ -1,92 +1,134 @@
-// src/components/Panel.jsx
 import React, { useRef, useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { useAnimation } from '../contexts/AnimationContext';
+import { getClipPathsForDirection, animatePanel } from '../utils/animation';
+import ProductCard from './ProductCard';
 import '../styles/Panel.css';
 
 const Panel = ({ 
   content, 
   position = 'left', 
   onClose, 
-  isVisible 
+  isVisible = false
 }) => {
   const panelRef = useRef(null);
   const imgRef = useRef(null);
   const contentRef = useRef(null);
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const tshirtDesignRef = useRef(null);
+  const animationRef = useRef(null);
   
-  const { setIsAnimating } = useAnimation();
+  const { config, isAnimating, setIsAnimating } = useAnimation();
   
-  // Class name based on position - exact match to original
+  // State for selected product options - matches original functionality
+  const [selectedColor, setSelectedColor] = useState('green');
+  const [selectedSize, setSelectedSize] = useState('M');
+  const [selectedGender, setSelectedGender] = useState('M');
+  
+  // Class based on position (left/right) - exactly like original
   const className = `panel ${position === 'right' ? 'panel--right' : ''}`;
   
-  // Preload the image when content changes
-  useEffect(() => {
-    if (content && content.image) {
-      setIsImageLoaded(false);
-      
-      // Create a new image to preload
-      const img = new Image();
-      
-      img.onload = () => {
-        setIsImageLoaded(true);
-      };
-      
-      img.onerror = () => {
-        // Even on error, we should proceed rather than getting stuck
-        setIsImageLoaded(true);
-      };
-      
-      img.src = content.image;
-    }
-  }, [content]);
-  
-  // Set up initial panel state when visible
+  // Handle animation on visibility change
   useEffect(() => {
     if (!panelRef.current || !imgRef.current || !contentRef.current) return;
-    if (!isVisible || !content || !isImageLoaded) return;
     
-    // Set initial state for the panel
+    // Set initial state when component mounts - matches original exactly
     gsap.set(panelRef.current, { 
-      opacity: 1, 
-      pointerEvents: 'auto' 
+      opacity: 0, 
+      pointerEvents: 'none' 
     });
     
-    // Set image background
-    if (imgRef.current && content.image) {
-      imgRef.current.style.backgroundImage = `url(${content.image})`;
-    }
-    
-    // Animation is now handled by animation.js through the Grid component
-    
-    return () => {
-      // Cleanup if needed
-    };
-  }, [isVisible, content, isImageLoaded]);
-  
-  // Set animation complete when panel is fully visible
-  useEffect(() => {
-    if (isVisible && content && isImageLoaded) {
-      // Add a listener for transitionend to detect when the panel reveal is complete
-      const handleTransitionEnd = () => {
-        setIsAnimating(false);
-      };
-      
-      const panelImg = imgRef.current;
-      if (panelImg) {
-        panelImg.addEventListener('transitionend', handleTransitionEnd);
-        
-        return () => {
-          panelImg.removeEventListener('transitionend', handleTransitionEnd);
-        };
+    // If becoming visible, animate panel reveal
+    if (isVisible && content) {
+      // Kill any existing animation
+      if (animationRef.current) {
+        animationRef.current.kill();
       }
+      
+      // Set image background - exactly like original
+      if (imgRef.current && content.image) {
+        imgRef.current.style.backgroundImage = `url(${content.image})`;
+        imgRef.current.dataset.bg = content.image;
+      }
+      
+      // Update t-shirt design - exactly like original
+      if (tshirtDesignRef.current && content.image) {
+        tshirtDesignRef.current.src = content.image;
+      }
+      
+      // Create animation with exact timing and easing
+      animationRef.current = animatePanel(
+        panelRef.current,
+        imgRef.current,
+        contentRef.current,
+        config,
+        config.clipPathDirection
+      );
+      
+      // When animation completes - exactly like original
+      animationRef.current.eventCallback("onComplete", () => {
+        setIsAnimating(false);
+      });
     }
-  }, [isVisible, content, isImageLoaded, setIsAnimating]);
+    
+    // Cleanup animation on unmount
+    return () => {
+      if (animationRef.current) {
+        animationRef.current.kill();
+      }
+    };
+  }, [isVisible, content, config, setIsAnimating]);
   
-  // Handle close button click - exact match to original
+  // Set up button selection handlers - matches original
+  useEffect(() => {
+    // This handles button selections exactly like original
+    const setupButtonSelections = () => {
+      // Color button selection
+      const colorButtons = document.querySelectorAll('.panel__color-btn');
+      colorButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+          colorButtons.forEach(b => b.classList.remove('selected'));
+          this.classList.add('selected');
+          setSelectedColor(this.dataset.color || 'green');
+        });
+      });
+      
+      // Size button selection
+      const sizeButtons = document.querySelectorAll('.panel__size-btn');
+      sizeButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+          // Find all size buttons in the same group
+          const group = this.closest('.panel__size-options');
+          if (!group) return;
+          
+          group.querySelectorAll('.panel__size-btn').forEach(b => 
+            b.classList.remove('selected'));
+          this.classList.add('selected');
+          
+          // Update state based on the group (size or gender)
+          if (this.dataset.size) {
+            if (['S', 'M', 'L', 'XL'].includes(this.dataset.size)) {
+              setSelectedSize(this.dataset.size);
+            } else if (['M', 'F'].includes(this.dataset.size)) {
+              setSelectedGender(this.dataset.size);
+            }
+          }
+        });
+      });
+    };
+    
+    // Run setup when panel is visible
+    if (isVisible && !isAnimating) {
+      // Small timeout to ensure DOM is ready - matches original behavior
+      setTimeout(setupButtonSelections, 100);
+    }
+  }, [isVisible, isAnimating]);
+  
+  // Handle close button click
   const handleCloseClick = (e) => {
-    e.preventDefault();
-    onClose();
+    e.preventDefault(); // Exact match to original behavior
+    if (!isAnimating) {
+      onClose();
+    }
   };
   
   if (!content) return null;
@@ -108,13 +150,16 @@ const Panel = ({
         <h3>{content.title}</h3>
         <p>{content.description}</p>
         
+        {/* Close button stays at the bottom - exactly like original */}
         <button 
           type="button" 
           className="panel__close" 
           aria-label="Close preview"
           onClick={handleCloseClick}
         >
-          Close
+          <svg width="24" height="24" viewBox="0 0 24 24">
+            <path d="M12 11.293l10.293-10.293.707.707-10.293 10.293 10.293 10.293-.707.707-10.293-10.293-10.293 10.293-.707-.707 10.293-10.293-10.293-10.293.707-.707 10.293 10.293z" />
+          </svg>
         </button>
       </figcaption>
     </figure>

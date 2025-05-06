@@ -1,4 +1,3 @@
-// src/utils/animation.js
 import { gsap } from 'gsap';
 
 /**
@@ -40,7 +39,7 @@ export const getClipPathsForDirection = (direction) => {
 };
 
 /**
- * Get the center position of an element - exact match to original
+ * Calculate the center position of an element - exact match to original
  */
 export const getElementCenter = (el) => {
   const rect = el.getBoundingClientRect();
@@ -48,7 +47,7 @@ export const getElementCenter = (el) => {
 };
 
 /**
- * Compute stagger delays for grid item animations - exact match to original
+ * Compute stagger delays for grid item exit animations - exact match to original
  */
 export const computeStaggerDelays = (clickedItem, items, staggerFactor) => {
   const baseCenter = getElementCenter(clickedItem);
@@ -61,11 +60,12 @@ export const computeStaggerDelays = (clickedItem, items, staggerFactor) => {
 };
 
 /**
- * Generate motion path between start and end elements - exact match to original
+ * Generate a motion path between start and end elements - exact match to original
  */
-export const generateMotionPath = (startRect, endRect, steps, config) => {
+export const generateMotionPath = (startRect, endRect, config) => {
+  const { steps, pathMotion, sineAmplitude, sineFrequency, wobbleStrength } = config;
   const path = [];
-  const fullSteps = steps + 2; // Add 2 for start and end points
+  const fullSteps = steps + 2; // Include start and end positions
   const startCenter = {
     x: startRect.left + startRect.width / 2,
     y: startRect.top + startRect.height / 2,
@@ -82,15 +82,15 @@ export const generateMotionPath = (startRect, endRect, steps, config) => {
     const centerX = lerp(startCenter.x, endCenter.x, t);
     const centerY = lerp(startCenter.y, endCenter.y, t);
 
-    // Apply sine wave motion if enabled - exact match to original
+    // Apply sine wave motion if enabled - exactly like original
     const sineOffset =
-      config.pathMotion === 'sine'
-        ? Math.sin(t * config.sineFrequency) * config.sineAmplitude
+      pathMotion === 'sine'
+        ? Math.sin(t * sineFrequency) * sineAmplitude
         : 0;
 
-    // Apply random wobble - exact match to original
-    const wobbleX = (Math.random() - 0.5) * config.wobbleStrength;
-    const wobbleY = (Math.random() - 0.5) * config.wobbleStrength;
+    // Add random wobble - exactly like original
+    const wobbleX = (Math.random() - 0.5) * wobbleStrength;
+    const wobbleY = (Math.random() - 0.5) * wobbleStrength;
 
     path.push({
       left: centerX - width / 2 + wobbleX,
@@ -107,8 +107,8 @@ export const generateMotionPath = (startRect, endRect, steps, config) => {
 /**
  * Animate frame visibility - exact match to original
  */
-export const animateFrame = (elements, visible) => {
-  return gsap.to(elements, {
+export const animateFrame = (frameElements, visible) => {
+  return gsap.to(frameElements, {
     opacity: visible ? 1 : 0,
     duration: 0.5,
     ease: 'sine.inOut',
@@ -117,7 +117,7 @@ export const animateFrame = (elements, visible) => {
 };
 
 /**
- * Animate all grid items - exact match to original
+ * Animate grid items - exact match to original
  */
 export const animateGridItems = (items, clickedItem, delays, config, clipPathDirection, isRevealing = false) => {
   const clipPaths = getClipPathsForDirection(clipPathDirection);
@@ -128,12 +128,10 @@ export const animateGridItems = (items, clickedItem, delays, config, clipPathDir
       if (isRevealing) return 1;
       return el === clickedItem ? 1 : 0.8;
     },
-    duration: (i, el) => {
-      if (el === clickedItem && !isRevealing) {
-        return config.stepDuration * config.clickedItemDurationFactor;
-      }
-      return 0.3; // Exact match to original
-    },
+    duration: (i, el) =>
+      el === clickedItem
+        ? config.stepDuration * config.clickedItemDurationFactor
+        : 0.3,
     ease: config.gridItemEase,
     clipPath: (i, el) => (el === clickedItem && !isRevealing ? clipPaths.from : 'none'),
     delay: (i) => delays[i],
@@ -142,195 +140,137 @@ export const animateGridItems = (items, clickedItem, delays, config, clipPathDir
 };
 
 /**
- * Create and animate mover elements - FIXED exact match to original
+ * Animate the panel reveal - exact match to original
  */
-export const createAndAnimateMovers = (startEl, endEl, config, imgURL, panelImgElement) => {
-  if (!startEl || !endEl) return [];
+export const animatePanel = (panel, panelImg, panelContent, config, clipPathDirection) => {
+  const clipPaths = getClipPathsForDirection(clipPathDirection);
   
-  // Get rects for start and end elements
-  const startRect = startEl.getBoundingClientRect();
-  const endRect = endEl.getBoundingClientRect();
+  // Set initial states - exact same as original
+  gsap.set(panelContent, { opacity: 0, y: 25 });
+  gsap.set(panel, { opacity: 1, pointerEvents: 'auto' });
+  gsap.set(panelImg, { clipPath: clipPaths.hide });
   
-  // Initially make panelImg completely invisible with clip-path AND opacity
-  const clipPaths = getClipPathsForDirection(config.clipPathDirection);
-  gsap.set(panelImgElement, { 
-    clipPath: clipPaths.hide,
-    opacity: 0 
+  // Create timeline with exact same settings as original
+  const tl = gsap.timeline({
+    defaults: {
+      duration: config.stepDuration * config.panelRevealDurationFactor,
+      ease: config.panelRevealEase,
+    }
   });
   
+  // Add animation sequences matching original
+  tl.fromTo(
+    panelImg,
+    { clipPath: clipPaths.hide },
+    {
+      clipPath: clipPaths.reveal,
+      pointerEvents: 'auto',
+      delay: config.steps * config.stepInterval,
+    }
+  )
+  .fromTo(
+    panelContent,
+    { y: 25 },
+    {
+      opacity: 1,
+      y: 0,
+      duration: 1,
+      ease: 'expo',
+    },
+    '<-=.2'  // This timing offset is crucial
+  );
+  
+  return tl;
+};
+
+/**
+ * Create and animate mover elements between source and target - exact match to original
+ */
+export const createAndAnimateMovers = (startElement, endElement, config, imageUrl) => {
+  if (!startElement || !endElement || !document.body) return [];
+  
+  // Get rects for start and end elements
+  const startRect = startElement.getBoundingClientRect();
+  const endRect = endElement.getBoundingClientRect();
+  
   // Generate path between elements - exact match to original
-  const path = generateMotionPath(startRect, endRect, config.steps, config);
+  const path = generateMotionPath(startRect, endRect, config);
+  const clipPaths = getClipPathsForDirection(config.clipPathDirection);
   
-  // Clean up any existing movers first
-  const existingMovers = document.querySelectorAll('.mover');
-  existingMovers.forEach(m => m.parentNode?.removeChild(m));
-  
-  // Use document fragment for better performance
-  const fragment = document.createDocumentFragment();
+  // Create mover elements
   const movers = [];
   
-  // Create and animate mover elements - exact match to original
   path.forEach((step, index) => {
+    // Create DOM element
     const mover = document.createElement('div');
     mover.className = 'mover';
     
-    // Set proper background image - FIXED: ensure URL format is preserved
-    const backgroundImage = imgURL;
+    // The rotation must use the same random function as original
+    const rotation = gsap.utils.random(-config.rotationRange, config.rotationRange);
     
-    // Apply styles directly using gsap.set
-    gsap.set(mover, {
-      backgroundImage: backgroundImage,
+    // Set style properties - exact match to original
+    Object.assign(mover.style, {
       position: 'fixed',
       left: `${step.left}px`,
       top: `${step.top}px`,
       width: `${step.width}px`,
       height: `${step.height}px`,
-      clipPath: clipPaths.hide, // Start with hide clipPath
-      zIndex: 1000 + index,
-      backgroundPosition: '50% 50%',
+      backgroundImage: `url(${imageUrl})`,
       backgroundSize: 'cover',
-      opacity: 0.4,
-      rotationZ: gsap.utils.random(-config.rotationRange, config.rotationRange),
+      backgroundPosition: '50% 50%',
+      zIndex: 1000 + index,
+      transform: `rotateZ(${rotation}deg)`,
+      clipPath: clipPaths.from,
+      willChange: 'transform, clip-path',
+      pointerEvents: 'none'
     });
     
     // Apply blend mode using data attribute - exact match to original
     if (config.moverBlendMode) {
-      mover.dataset.blendMode = config.moverBlendMode;
+      mover.setAttribute('data-blend-mode', config.moverBlendMode);
     }
     
-    fragment.appendChild(mover);
+    // Add to document
+    document.body.appendChild(mover);
     movers.push(mover);
     
-    // Create animation timeline with exact timing from original
+    // Set up timeline for this mover with exact same delays and durations
     const delay = index * config.stepInterval;
     
-    const tl = gsap.timeline({ delay });
-    
-    // First animation - from hide to reveal
-    tl.fromTo(
-      mover,
-      { 
-        clipPath: clipPaths.hide,
-        opacity: 0.4
-      },
-      {
-        clipPath: clipPaths.reveal,
-        opacity: 1,
-        duration: config.stepDuration,
-        ease: config.moverEnterEase,
-      }
-    );
-    
-    // Second animation after pause - from reveal to hide/from
-    tl.to(
-      mover,
-      {
-        clipPath: clipPaths.from,
-        duration: config.stepDuration,
-        ease: config.moverExitEase,
-      },
-      `+=${config.moverPauseBeforeExit}`  // This adds the pause exactly as in original
-    );
+    gsap.timeline({ delay })
+      .fromTo(
+        mover,
+        { 
+          opacity: 0.4, 
+          clipPath: clipPaths.hide 
+        },
+        {
+          opacity: 1,
+          clipPath: clipPaths.reveal,
+          duration: config.stepDuration,
+          ease: config.moverEnterEase,
+        }
+      )
+      .to(
+        mover,
+        {
+          clipPath: clipPaths.from,
+          duration: config.stepDuration,
+          ease: config.moverExitEase,
+        },
+        `+=${config.moverPauseBeforeExit}`
+      );
   });
   
-  // Find the grid and insert movers at exactly the same position as original
-  const grid = document.querySelector('.grid');
-  if (grid && grid.parentNode) {
-    grid.parentNode.insertBefore(fragment, grid.nextSibling);
-  } else {
-    // Fallback if grid not found
-    document.body.appendChild(fragment);
-  }
-  
-  // Schedule cleanup with exact timing from original
+  // Schedule cleanup with exact same timing as original
   const cleanupDelay =
     config.steps * config.stepInterval +
     config.stepDuration * 2 +
-    config.moverPauseBeforeExit + 0.1; // Add slight buffer
+    config.moverPauseBeforeExit;
   
   gsap.delayedCall(cleanupDelay, () => {
-    movers.forEach(m => {
-      if (m.parentNode) m.parentNode.removeChild(m);
-    });
+    movers.forEach(m => m.parentNode && m.parentNode.removeChild(m));
   });
-  
-  // Now we trigger the panel reveal
-  revealPanel(panelImgElement, endEl.parentNode, config);
   
   return movers;
-};
-
-/**
- * Reveal the panel image at the right time - EXACT match to original
- */
-export const revealPanel = (panelImg, container, config) => {
-  const clipPaths = getClipPathsForDirection(config.clipPathDirection);
-  const panelContent = document.querySelector('.panel__content');
-  const panel = document.querySelector('.panel');
-  
-  // Set initial states
-  gsap.set(panelContent, { opacity: 0, y: 25 });
-  gsap.set(panel, { opacity: 1, pointerEvents: 'auto' });
-  
-  // Create timeline with the exact delay based on mover animations
-  const revealDelay = config.steps * config.stepInterval;
-  
-  // IMPORTANT: Log to verify timing
-  console.log('Panel reveal delay:', revealDelay);
-  
-  // Create animation sequence with exact timing from original
-  const tl = gsap.timeline({
-    defaults: {
-      duration: config.stepDuration * config.panelRevealDurationFactor,
-      ease: config.panelRevealEase
-    }
-  });
-  
-  // First make sure the panel is visible - before any animation happens
-  tl.set(panelImg, { opacity: 1 });
-  
-  // Then wait for the right timing
-  tl.set({}, {}, revealDelay);
-  
-  // Then animate the clip-path
-  tl.fromTo(
-    panelImg, 
-    {
-      clipPath: clipPaths.hide,
-    },
-    {
-      clipPath: clipPaths.reveal,
-      duration: config.stepDuration * config.panelRevealDurationFactor,
-      ease: config.panelRevealEase,
-    }
-  );
-  
-  // Finally, animate the content
-  tl.to(
-    panelContent,
-    {
-      duration: 1,
-      ease: 'expo',
-      opacity: 1,
-      y: 0,
-    },
-    '<-=0.2' // This is the specific timing offset from the original
-  );
-};
-
-/**
- * Animate panel reveal - Use the separate revealPanel function
- */
-export const animatePanel = (panel, panelImg, panelContent, config, clipPathDirection) => {
-  
-  // Set initial state of panel
-  gsap.set(panel, { opacity: 1, pointerEvents: 'auto' });
-  
-  // The actual animation is now handled by revealPanel, called from createAndAnimateMovers
-  
-  // Create an empty timeline so we can return something
-  const tl = gsap.timeline();
-  
-  // Return the timeline
-  return tl;
 };

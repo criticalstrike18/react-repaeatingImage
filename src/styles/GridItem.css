@@ -1,4 +1,4 @@
-/* src/styles/GridItem.css */
+/* GridItem component styles - Exact match to original CSS */
 .grid__item {
   margin: 0;
   padding: 0;
@@ -17,15 +17,9 @@
 .grid__item-image {
   width: 100%;
   aspect-ratio: var(--aspect);
-  background-size: 100%;
+  background-size: cover;
   background-position: 50% 50%;
   transition: opacity 0.15s cubic-bezier(0.2, 0, 0.2, 1);
-}
-
-.grid__item-caption {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
 }
 
 .grid__item-caption h3 {
@@ -49,4 +43,10 @@
 /* Active state for clicked item */
 .grid__item.active {
   z-index: 100;
+}
+
+/* Ensure the transition on grid items is exactly the same as original */
+.grid__item {
+  transition: opacity 0.3s cubic-bezier(0.2, 0, 0.2, 1), 
+              transform 0.3s cubic-bezier(0.2, 0, 0.2, 1);
 }

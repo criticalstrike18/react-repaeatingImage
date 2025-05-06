@@ -1,13 +1,13 @@
 import React, { createContext, useState, useContext, useRef } from 'react';
 
-// Default animation configuration - EXACT match to original repo with slight timing adjustments for React
+// Default animation configuration - Exactly matches the original repo's config
 const defaultConfig = {
   clipPathDirection: 'top-bottom', // Direction of clip-path animation ('top-bottom', 'bottom-top', 'left-right', 'right-left')
   autoAdjustHorizontalClipPath: true, // Automatically flip horizontal clip-path direction based on panel side
   steps: 6, // Number of mover elements generated between grid item and panel
-  stepDuration: 0.4, // Duration (in seconds) for each animation step - slightly increased
-  stepInterval: 0.07, // Delay between each mover's animation start - slightly increased
-  moverPauseBeforeExit: 0.2, // Pause before mover elements exit after entering - slightly increased
+  stepDuration: 0.35, // Duration (in seconds) for each animation step
+  stepInterval: 0.05, // Delay between each mover's animation start
+  moverPauseBeforeExit: 0.14, // Pause before mover elements exit after entering
   rotationRange: 0, // Maximum random rotation applied to each mover's Z-axis (tilt left/right)
   wobbleStrength: 0, // Maximum random positional wobble (in pixels) applied horizontally/vertically to each mover path
   panelRevealEase: 'sine.inOut', // Easing function for panel reveal animation
@@ -23,7 +23,7 @@ const defaultConfig = {
   sineFrequency: Math.PI, // Frequency of sine wave for pathMotion 'sine'
 };
 
-// EXACT match to original attribute values
+// Use the exact same values from the original data attributes for effect variants
 const effectVariants = {
   effect02: {
     steps: 8,
@@ -67,11 +67,10 @@ const AnimationContext = createContext();
 
 export const AnimationProvider = ({ children }) => {
   const [isAnimating, setIsAnimating] = useState(false);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [config, setConfig] = useState({...defaultConfig});
   const originalConfig = useRef({...defaultConfig});
   
-  // Apply effect variant or custom config from a GridItem - EXACT match to original
+  // Apply effect variant or custom config from a GridItem
   const applyConfig = (customConfig = {}, variant = null) => {
     let newConfig = {...defaultConfig};
     
@@ -93,7 +92,7 @@ export const AnimationProvider = ({ children }) => {
     setConfig(newConfig);
   };
   
-  // Reset config to default - EXACT match to original
+  // Reset config to default
   const resetConfig = () => {
     setConfig({...originalConfig.current});
   };
@@ -104,8 +103,6 @@ export const AnimationProvider = ({ children }) => {
         config,
         isAnimating,
         setIsAnimating,
-        isPanelOpen, 
-        setIsPanelOpen,
         applyConfig,
         resetConfig
       }}

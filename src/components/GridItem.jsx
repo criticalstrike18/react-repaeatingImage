@@ -1,4 +1,3 @@
-// src/components/GridItem.jsx
 import React, { forwardRef, useRef, useEffect } from 'react';
 import '../styles/GridItem.css';
 
@@ -34,9 +33,10 @@ const GridItem = forwardRef(({ item, onClick, isActive, isPanelOpen }, ref) => {
     wobbleStrength
   } = item;
 
-  // Load image background when component mounts or image changes - exact match to original
+  // Load image background when component mounts or image changes
   useEffect(() => {
     if (imageRef.current && image) {
+      // This exactly matches how the original code sets background images
       imageRef.current.style.backgroundImage = `url(${image})`;
     }
   }, [image]);

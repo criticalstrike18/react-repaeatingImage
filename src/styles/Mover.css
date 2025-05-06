@@ -1,21 +1,15 @@
-/* src/styles/Mover.css */
+/* Mover component styles - Exact match to original */
 .mover {
   position: fixed;
   aspect-ratio: var(--aspect);
-  background-size: cover !important;
+  background-size: cover;
   background-position: 50% 50%;
   will-change: transform, clip-path;
   pointer-events: none;
   z-index: 1500;
-  transition: opacity 0.05s ease;
 }
 
-/* Add debug styles to make movers more visible during development */
-.debug-mode .mover {
-  border: 2px solid rgba(255, 0, 0, 0.5);
-}
-
-/* Blend mode options for movers - exact match to original */
+/* Blend mode options for mover elements through data attributes - Exact match to original */
 .mover[data-blend-mode="hard-light"] { mix-blend-mode: hard-light; }
 .mover[data-blend-mode="multiply"] { mix-blend-mode: multiply; }
 .mover[data-blend-mode="overlay"] { mix-blend-mode: overlay; }
