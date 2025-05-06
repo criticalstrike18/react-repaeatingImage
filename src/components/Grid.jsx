@@ -1,4 +1,3 @@
-// Enhanced Grid.jsx to properly implement original transitions
 import React, { useRef, useEffect, useState } from 'react';
 import GridItem from './GridItem';
 import { useAnimation } from '../contexts/AnimationContext';
@@ -24,13 +23,13 @@ const Grid = ({
   // Local state
   const [movers, setMovers] = useState([]);
   
-  // Animation context
+  // Animation context - make sure to destructure extractConfigFromDataset
   const { 
     config, 
     isAnimating, 
     setIsAnimating,
     applyConfig,
-    extractConfigFromDataset,
+    extractConfigFromDataset, // Make sure this is destructured
   } = useAnimation();
   
   // Update refs when items change
@@ -49,8 +48,38 @@ const Grid = ({
     const element = itemsRef.current[index];
     if (!element) return;
     
-    // Extract custom configuration from dataset
-    const datasetConfig = extractConfigFromDataset(element.dataset);
+    // Create a fallback function if extractConfigFromDataset is not available
+    const getConfigFromDataset = (dataset) => {
+      if (typeof extractConfigFromDataset === 'function') {
+        return extractConfigFromDataset(dataset);
+      }
+      
+      // Fallback implementation
+      const configData = {};
+      if (dataset.steps) configData.steps = parseInt(dataset.steps);
+      if (dataset.rotationRange) configData.rotationRange = parseFloat(dataset.rotationRange);
+      if (dataset.stepInterval) configData.stepInterval = parseFloat(dataset.stepInterval);
+      if (dataset.stepDuration) configData.stepDuration = parseFloat(dataset.stepDuration);
+      if (dataset.moverPauseBeforeExit) configData.moverPauseBeforeExit = parseFloat(dataset.moverPauseBeforeExit);
+      if (dataset.clipPathDirection) configData.clipPathDirection = dataset.clipPathDirection;
+      if (dataset.autoAdjustHorizontalClipPath) configData.autoAdjustHorizontalClipPath = dataset.autoAdjustHorizontalClipPath === 'true';
+      if (dataset.moverBlendMode) configData.moverBlendMode = dataset.moverBlendMode;
+      if (dataset.pathMotion) configData.pathMotion = dataset.pathMotion;
+      if (dataset.sineAmplitude) configData.sineAmplitude = parseFloat(dataset.sineAmplitude);
+      if (dataset.sineFrequency) configData.sineFrequency = parseFloat(dataset.sineFrequency);
+      if (dataset.moverEnterEase) configData.moverEnterEase = dataset.moverEnterEase;
+      if (dataset.moverExitEase) configData.moverExitEase = dataset.moverExitEase;
+      if (dataset.panelRevealEase) configData.panelRevealEase = dataset.panelRevealEase;
+      if (dataset.panelRevealDurationFactor) configData.panelRevealDurationFactor = parseFloat(dataset.panelRevealDurationFactor);
+      if (dataset.clickedItemDurationFactor) configData.clickedItemDurationFactor = parseFloat(dataset.clickedItemDurationFactor);
+      if (dataset.gridItemStaggerFactor) configData.gridItemStaggerFactor = parseFloat(dataset.gridItemStaggerFactor);
+      if (dataset.wobbleStrength) configData.wobbleStrength = parseFloat(dataset.wobbleStrength);
+      
+      return configData;
+    };
+    
+    // Extract custom configuration from dataset using fallback if needed
+    const datasetConfig = getConfigFromDataset(element.dataset);
     
     // Apply configuration (effect variant + custom overrides)
     applyConfig(
@@ -62,7 +91,6 @@ const Grid = ({
     );
     
     // Auto-adjust horizontal clip path direction based on click position
-    // This exactly matches the original positionPanelBasedOnClick function
     if (config.autoAdjustHorizontalClipPath) {
       const center = getElementCenter(element);
       const windowHalf = window.innerWidth / 2;
@@ -156,21 +184,21 @@ const Grid = ({
     ? items.filter(item => item.effectVariant === effectVariant)
     : items.filter(item => !item.effectVariant);
   
-  return (
-    <div className="grid" ref={gridRef}>
-      {displayItems.map((item, index) => (
-        <GridItem
-          key={item.id}
-          ref={el => itemsRef.current[index] = el}
-          item={item}
-          onClick={() => handleGridItemClick(item, index)}
-          isActive={activeItem && activeItem.id === item.id}
-          isPanelOpen={isPanelOpen}
-          effectVariant={effectVariant}
-        />
-      ))}
-    </div>
-  );
-};
-
-export default Grid;
+    return (
+      <div className="grid" ref={gridRef}>
+        {displayItems.map((item, index) => (
+          <GridItem
+            key={item.id}
+            ref={el => itemsRef.current[index] = el}
+            item={item}
+            onClick={() => handleGridItemClick(item, index)}
+            isActive={activeItem && activeItem.id === item.id}
+            isPanelOpen={isPanelOpen}
+            effectVariant={effectVariant}
+          />
+        ))}
+      </div>
+    );
+  };
+  
+  export default Grid;
