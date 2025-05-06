@@ -1,17 +1,23 @@
+// Enhanced GridItem.jsx for proper transition animations
 import React, { forwardRef, useRef, useEffect } from 'react';
 import '../styles/GridItem.css';
 
-const GridItem = forwardRef(({ item, onClick, isActive, isPanelOpen }, ref) => {
+const GridItem = forwardRef(({ 
+  item, 
+  onClick, 
+  isActive, 
+  isPanelOpen, 
+  effectVariant 
+}, ref) => {
   const imageRef = useRef(null);
   
-  // Extract all properties from item for data attributes
+  // Extract all item properties
   const {
     id,
     title,
     description,
     image,
-    effectVariant,
-    // Optional animation configuration properties
+    // Animation configuration properties
     steps,
     rotationRange,
     stepInterval,
@@ -31,19 +37,20 @@ const GridItem = forwardRef(({ item, onClick, isActive, isPanelOpen }, ref) => {
     gridItemStaggerFactor,
     gridItemEase,
     wobbleStrength
-  } = item;
+  } = item || {};
 
-  // Load image background when component mounts or image changes
+  // Set image background when component mounts or image changes
   useEffect(() => {
     if (imageRef.current && image) {
-      // This exactly matches how the original code sets background images
       imageRef.current.style.backgroundImage = `url(${image})`;
+      imageRef.current.dataset.bg = image;
     }
   }, [image]);
 
-  // Prepare class name based on state - exactly matches original CSS classes
+  // Classes for state
   const className = `grid__item ${isActive ? 'active' : ''} ${isPanelOpen ? 'panel-open' : ''}`;
 
+  // All data attributes must match the original exactly
   return (
     <figure 
       className={className}
@@ -51,7 +58,7 @@ const GridItem = forwardRef(({ item, onClick, isActive, isPanelOpen }, ref) => {
       onClick={onClick}
       role="img" 
       aria-labelledby={`caption-${id}`}
-      // Include ALL data attributes exactly as in the original HTML
+      data-effect-variant={effectVariant || item.effectVariant}
       data-steps={steps}
       data-rotation-range={rotationRange}
       data-step-interval={stepInterval}
@@ -71,7 +78,6 @@ const GridItem = forwardRef(({ item, onClick, isActive, isPanelOpen }, ref) => {
       data-grid-item-stagger-factor={gridItemStaggerFactor}
       data-grid-item-ease={gridItemEase}
       data-wobble-strength={wobbleStrength}
-      data-effect-variant={effectVariant}
     >
       <div 
         className="grid__item-image" 
