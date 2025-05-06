@@ -1,25 +1,28 @@
-import React, { useRef, useEffect } from 'react';
+// Enhanced Grid.jsx to properly implement original transitions
+import React, { useRef, useEffect, useState } from 'react';
 import GridItem from './GridItem';
 import { useAnimation } from '../contexts/AnimationContext';
 import { 
-  computeStaggerDelays, 
   getElementCenter, 
-  createAndAnimateMovers,
-  animateGridItems
+  computeStaggerDelays,
+  animateGridItems,
+  animateTransition
 } from '../utils/animation';
 import '../styles/Grid.css';
 
 const Grid = ({ 
-  items, 
+  items = [], 
   onItemClick, 
   isPanelOpen, 
   activeItem, 
   effectVariant = null 
 }) => {
-  // Refs
+  // Refs for DOM elements
   const gridRef = useRef(null);
-  const itemRefs = useRef([]);
-  const moversRef = useRef([]);
+  const itemsRef = useRef([]);
+  
+  // Local state
+  const [movers, setMovers] = useState([]);
   
   // Animation context
   const { 
@@ -27,61 +30,38 @@ const Grid = ({
     isAnimating, 
     setIsAnimating,
     applyConfig,
-    resetConfig
+    extractConfigFromDataset,
   } = useAnimation();
   
-  // Reset refs array when items change
+  // Update refs when items change
   useEffect(() => {
-    itemRefs.current = itemRefs.current.slice(0, items?.length || 0);
+    itemsRef.current = itemsRef.current.slice(0, items.length);
   }, [items]);
   
-  // Handle click on grid item
+  // Handle grid item click
   const handleGridItemClick = (item, index) => {
     if (isAnimating || isPanelOpen) return;
     
-    // Get the DOM element for this grid item
-    const element = itemRefs.current[index];
+    // Start animation
+    setIsAnimating(true);
+    
+    // Get DOM element
+    const element = itemsRef.current[index];
     if (!element) return;
     
-    // Apply any data-* attributes from this item to the config
-    const itemConfig = {};
+    // Extract custom configuration from dataset
+    const datasetConfig = extractConfigFromDataset(element.dataset);
     
-    // Extract attributes from dataset exactly as in original
-    if (element.dataset.steps) itemConfig.steps = parseInt(element.dataset.steps);
-    if (element.dataset.rotationRange) itemConfig.rotationRange = parseFloat(element.dataset.rotationRange);
-    if (element.dataset.stepInterval) itemConfig.stepInterval = parseFloat(element.dataset.stepInterval);
-    if (element.dataset.stepDuration) itemConfig.stepDuration = parseFloat(element.dataset.stepDuration);
-    if (element.dataset.moverPauseBeforeExit) itemConfig.moverPauseBeforeExit = parseFloat(element.dataset.moverPauseBeforeExit);
-    if (element.dataset.clipPathDirection) itemConfig.clipPathDirection = element.dataset.clipPathDirection;
-    if (element.dataset.moverBlendMode) itemConfig.moverBlendMode = element.dataset.moverBlendMode;
-    if (element.dataset.pathMotion) itemConfig.pathMotion = element.dataset.pathMotion;
-    if (element.dataset.sineAmplitude) itemConfig.sineAmplitude = parseFloat(element.dataset.sineAmplitude);
-    if (element.dataset.moverEnterEase) itemConfig.moverEnterEase = element.dataset.moverEnterEase;
-    if (element.dataset.moverExitEase) itemConfig.moverExitEase = element.dataset.moverExitEase;
-    if (element.dataset.panelRevealEase) itemConfig.panelRevealEase = element.dataset.panelRevealEase;
-    if (element.dataset.panelRevealDurationFactor) itemConfig.panelRevealDurationFactor = parseFloat(element.dataset.panelRevealDurationFactor);
-    if (element.dataset.autoAdjustHorizontalClipPath) itemConfig.autoAdjustHorizontalClipPath = element.dataset.autoAdjustHorizontalClipPath === 'true';
+    // Apply configuration (effect variant + custom overrides)
+    applyConfig(
+      { 
+        ...datasetConfig,
+        ...item // Include any config properties directly in the item object
+      }, 
+      effectVariant || item.effectVariant
+    );
     
-    // Or from direct props - also check for these exact attributes
-    if (item.steps) itemConfig.steps = item.steps;
-    if (item.rotationRange) itemConfig.rotationRange = item.rotationRange;
-    if (item.stepInterval) itemConfig.stepInterval = item.stepInterval;
-    if (item.stepDuration) itemConfig.stepDuration = item.stepDuration;
-    if (item.moverPauseBeforeExit) itemConfig.moverPauseBeforeExit = item.moverPauseBeforeExit;
-    if (item.clipPathDirection) itemConfig.clipPathDirection = item.clipPathDirection;
-    if (item.moverBlendMode) itemConfig.moverBlendMode = item.moverBlendMode;
-    if (item.pathMotion) itemConfig.pathMotion = item.pathMotion;
-    if (item.sineAmplitude) itemConfig.sineAmplitude = item.sineAmplitude;
-    if (item.moverEnterEase) itemConfig.moverEnterEase = item.moverEnterEase;
-    if (item.moverExitEase) itemConfig.moverExitEase = item.moverExitEase;
-    if (item.panelRevealEase) itemConfig.panelRevealEase = item.panelRevealEase;
-    if (item.panelRevealDurationFactor) itemConfig.panelRevealDurationFactor = item.panelRevealDurationFactor;
-    if (item.autoAdjustHorizontalClipPath) itemConfig.autoAdjustHorizontalClipPath = item.autoAdjustHorizontalClipPath;
-    
-    // Apply the config, including effect variant if provided
-    applyConfig(itemConfig, effectVariant);
-    
-    // IMPORTANT: Auto-adjust clipPath direction based on click position
+    // Auto-adjust horizontal clip path direction based on click position
     // This exactly matches the original positionPanelBasedOnClick function
     if (config.autoAdjustHorizontalClipPath) {
       const center = getElementCenter(element);
@@ -89,97 +69,104 @@ const Grid = ({
       const isLeftSide = center.x < windowHalf;
       
       if (config.clipPathDirection === 'left-right' || config.clipPathDirection === 'right-left') {
-        config.clipPathDirection = isLeftSide ? 'left-right' : 'right-left';
-        // Update the config immediately
-        applyConfig({ clipPathDirection: config.clipPathDirection }, effectVariant);
+        // Update clip path direction based on which side was clicked
+        const updatedDirection = isLeftSide ? 'left-right' : 'right-left';
+        applyConfig({ ...datasetConfig, clipPathDirection: updatedDirection }, effectVariant);
       }
     }
     
-    // Calculate center position for panel positioning
-    const center = getElementCenter(element);
+    // Get all grid items for staggered animation
+    const allGridItems = Array.from(gridRef.current.querySelectorAll('.grid__item'));
     
-    // Get delays for animating other grid items
-    const allGridItems = gridRef.current.querySelectorAll('.grid__item');
+    // Calculate stagger delays based on distance from clicked item
     const delays = computeStaggerDelays(element, allGridItems, config.gridItemStaggerFactor);
     
-    // Animate grid items out
-    animateGridItems(allGridItems, element, delays, config, config.clipPathDirection, false);
+    // Animate grid items (fade out other items)
+    animateGridItems(allGridItems, element, delays, config);
     
-    // Let the parent know which item was clicked
-    onItemClick(item, center.x);
+    // Pass center position and item to parent
+    onItemClick(item, getElementCenter(element).x);
   };
   
-  // Effect to create mover animations when an item is clicked
+  // Effect to create mover animations when an item is clicked and panel is open
   useEffect(() => {
     if (isPanelOpen && activeItem) {
-      // Find the active grid item element
+      // Find the clicked grid item
       const activeIndex = items.findIndex(item => item.id === activeItem.id);
-      if (activeIndex >= 0 && itemRefs.current[activeIndex]) {
-        const activeElement = itemRefs.current[activeIndex];
+      if (activeIndex >= 0 && itemsRef.current[activeIndex]) {
+        const activeElement = itemsRef.current[activeIndex];
         const imageElement = activeElement.querySelector('.grid__item-image');
-        const imageUrl = activeItem.image;
         
-        // Find the panel image element
+        // Find the panel image element (will be available in DOM)
         const panelImg = document.querySelector('.panel__img');
         
         if (imageElement && panelImg) {
-          // Create and animate movers between the grid item and panel
-          // Store the movers for cleanup
-          moversRef.current = createAndAnimateMovers(imageElement, panelImg, config, imageUrl);
+          // Create and animate transition
+          const imageUrl = activeItem.image || imageElement.dataset.bg;
+          const { movers: newMovers } = animateTransition(
+            imageElement, 
+            panelImg, 
+            imageUrl, 
+            config
+          );
+          
+          // Store movers for cleanup
+          setMovers(newMovers);
         }
       }
     }
     
-    // Clean up movers when panel closes
+    // Clean up movers when component unmounts or panel closes
     return () => {
-      if (moversRef.current.length > 0) {
-        moversRef.current.forEach(mover => {
-          if (mover && mover.parentNode) {
+      if (movers.length > 0) {
+        movers.forEach(mover => {
+          if (mover.parentNode) {
             mover.parentNode.removeChild(mover);
           }
         });
-        moversRef.current = [];
       }
     };
-  }, [isPanelOpen, activeItem, items, config]);
+  }, [isPanelOpen, activeItem, config, items, movers, setMovers]);
   
-  // When panel closes, animate the grid items back in
+  // Effect to handle panel closing animation
   useEffect(() => {
-    if (!isPanelOpen && activeItem) {
-      // Get all grid items
-      const allGridItems = gridRef.current.querySelectorAll('.grid__item');
-      
-      // Calculate distances for staggered animation
+    if (!isPanelOpen && activeItem && gridRef.current) {
+      // Find the previously active item
       const activeIndex = items.findIndex(item => item.id === activeItem.id);
-      if (activeIndex >= 0 && itemRefs.current[activeIndex]) {
-        // Calculate stagger delays based on distance from active item
+      
+      if (activeIndex >= 0 && itemsRef.current[activeIndex]) {
+        // Get all grid items
+        const allGridItems = Array.from(gridRef.current.querySelectorAll('.grid__item'));
+        
+        // Calculate stagger delays
         const delays = computeStaggerDelays(
-          itemRefs.current[activeIndex], 
+          itemsRef.current[activeIndex], 
           allGridItems, 
           config.gridItemStaggerFactor
         );
         
-        // Animate items back in
-        animateGridItems(allGridItems, null, delays, config, config.clipPathDirection, true);
+        // Animate grid items back in
+        animateGridItems(allGridItems, null, delays, config, true);
       }
     }
   }, [isPanelOpen, activeItem, items, config]);
   
-  // Filter items based on effectVariant - exactly like original
-  const filteredItems = effectVariant 
+  // Filter items by variant
+  const displayItems = effectVariant 
     ? items.filter(item => item.effectVariant === effectVariant)
     : items.filter(item => !item.effectVariant);
-
+  
   return (
     <div className="grid" ref={gridRef}>
-      {filteredItems.map((item, index) => (
+      {displayItems.map((item, index) => (
         <GridItem
           key={item.id}
+          ref={el => itemsRef.current[index] = el}
           item={item}
-          ref={el => itemRefs.current[index] = el}
           onClick={() => handleGridItemClick(item, index)}
           isActive={activeItem && activeItem.id === item.id}
           isPanelOpen={isPanelOpen}
+          effectVariant={effectVariant}
         />
       ))}
     </div>

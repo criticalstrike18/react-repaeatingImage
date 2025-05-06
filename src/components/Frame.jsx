@@ -1,3 +1,4 @@
+// Frame.jsx for header and navigation
 import React, { forwardRef } from 'react';
 import '../styles/Frame.css';
 
